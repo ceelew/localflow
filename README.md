@@ -26,6 +26,8 @@ release  ──► Qwen3-4B-Instruct via llama.cpp (localhost only) ──► cl
 
 LocalFlow turns on **Start at Login** the first time it runs, and it appears under System Settings ▸ General ▸ Login Items. To turn it off, use menu bar ▸ Start at Login.
 
+Pick the hotkey from menu bar ▸ Hotkey: Left Control, Right Option (the default), Fn, or Right Command. If you press another key while holding it (Control-C, for example), LocalFlow treats it as a shortcut and throws the recording away.
+
 If you pick **Fn** as the hotkey, set System Settings ▸ Keyboard ▸ "Press 🌐 key to" ▸ **Do Nothing**, so macOS doesn't open the emoji picker.
 
 ## Testing without the hotkey

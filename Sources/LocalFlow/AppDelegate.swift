@@ -22,6 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hotkey = HotkeyMonitor(key: saved ?? .rightOption)
         hotkey.onPress = { [weak self] in self?.beginRecording() }
         hotkey.onRelease = { [weak self] in self?.endRecording() }
+        hotkey.onCancel = { [weak self] in self?.cancelRecording() }
         set(.loading)
         enableLoginItemOnFirstRun()
         rebuildMenu()
@@ -130,6 +131,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } catch {
             Log.info("mic start failed: \(error)")
         }
+    }
+
+    /// The hotkey turned out to be part of a keyboard shortcut: stop the mic and discard the audio.
+    private func cancelRecording() {
+        guard isRecording else { return }
+        isRecording = false
+        _ = recorder.stop()
+        pill.hide()
+        set(.idle)
     }
 
     private func endRecording() {

@@ -5,12 +5,14 @@ import CoreGraphics
 /// Uses a listen-only CGEventTap on flagsChanged, which needs the Input Monitoring permission.
 final class HotkeyMonitor {
     enum Key: String, CaseIterable {
+        case leftControl = "Left Control"
         case rightOption = "Right Option"
         case fn = "Fn (Globe)"
         case rightCommand = "Right Command"
 
         var keyCode: Int64 {
             switch self {
+            case .leftControl: return 59
             case .rightOption: return 61
             case .fn: return 63
             case .rightCommand: return 54
@@ -19,6 +21,7 @@ final class HotkeyMonitor {
 
         var flag: CGEventFlags {
             switch self {
+            case .leftControl: return .maskControl
             case .rightOption: return .maskAlternate
             case .fn: return .maskSecondaryFn
             case .rightCommand: return .maskCommand
@@ -29,6 +32,8 @@ final class HotkeyMonitor {
     var key: Key
     var onPress: (() -> Void)?
     var onRelease: (() -> Void)?
+    /// The hotkey was used as part of a shortcut (e.g. Control-C), so the recording should be thrown away.
+    var onCancel: (() -> Void)?
 
     private var tap: CFMachPort?
     private var isDown = false
@@ -40,7 +45,7 @@ final class HotkeyMonitor {
 
     func start() -> Bool {
         if tap != nil { return true }
-        let mask = CGEventMask(1 << CGEventType.flagsChanged.rawValue)
+        let mask = CGEventMask(1 << CGEventType.flagsChanged.rawValue) | CGEventMask(1 << CGEventType.keyDown.rawValue)
         let refcon = Unmanaged.passUnretained(self).toOpaque()
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
@@ -70,6 +75,15 @@ final class HotkeyMonitor {
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
             Log.info("hotkey: tap was disabled by macOS (\(type.rawValue)); re-enabling")
             if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
+            return
+        }
+        // Pressing any other key, or another modifier, while the hotkey is held means it's part of a
+        // shortcut (Control-C, Control-Shift-...), not dictation.
+        if isDown && (type == .keyDown || (type == .flagsChanged
+                && event.getIntegerValueField(.keyboardEventKeycode) != key.keyCode)) {
+            isDown = false
+            Log.info("hotkey: used in a shortcut; recording cancelled")
+            onCancel?()
             return
         }
         guard type == .flagsChanged else { return }
