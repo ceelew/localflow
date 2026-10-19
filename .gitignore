@@ -1,0 +1,12 @@
+# Build output
+.build/
+.build-manual/
+build/
+
+# FluidAudio source is fetched by build.sh
+vendor/
+
+# Local eval runs
+eval/results/
+
+.DS_Store
