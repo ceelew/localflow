@@ -54,6 +54,8 @@ This runs the real pipeline (fast path, LLM, safety checks) and prints failures,
 | First prompt | 97/123 (79%) | 295 ms |
 | Tuned prompt, fast-path triggers, word-reuse safety check | 116/123 (94%) | 349 ms |
 
+With spoken-punctuation handling (16 more cases, 139 total): 132/139 (95%), median 357 ms.
+
 The remaining failures are judgment calls where the 4B model over-edits ("He said that that was" → "He said that was", or dropping "I think").
 
 Model comparison on the same build (one grading bug, which marked Llama's correct "March 5th" as wrong, is counted as a pass):
